@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  font: 16px/1.5 system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.hint {
+  margin-top: 24px;
+  color: #475569;
+}

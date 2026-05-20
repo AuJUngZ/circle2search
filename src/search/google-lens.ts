@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 export function getGoogleLensUploadUrl(): string {
   return 'https://lens.google.com/v3/upload';
 }
@@ -33,4 +35,24 @@ export function buildGoogleLensForm(file: File): HTMLFormElement {
 
   form.append(fileInput, imageContent);
   return form;
+}
+
+const STORAGE_KEY = 'crop2search:pending-image';
+
+export async function openGoogleLensResults(file: File): Promise<void> {
+  const serialized = {
+    name: file.name,
+    type: file.type,
+    base64: await fileToBase64(file)
+  };
+
+  await browser.storage.local.set({ [STORAGE_KEY]: serialized });
+
+  const searchPage = browser.runtime.getURL('search/index.html');
+  await browser.tabs.create({ url: searchPage, active: false });
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }

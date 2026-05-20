@@ -6,6 +6,9 @@ export async function runSelectionSession(mode: SelectionMode): Promise<Selectio
   const overlay = createOverlayRoot();
   const points: Point[] = [];
 
+  const originalBodyPointerEvents = document.body.style.pointerEvents;
+  document.body.style.setProperty('pointer-events', 'none', 'important');
+
   return await new Promise<SelectionPayload>((resolve, reject) => {
     let startX = 0;
     let startY = 0;
@@ -29,10 +32,12 @@ export async function runSelectionSession(mode: SelectionMode): Promise<Selectio
       }
 
       overlay.root.setPointerCapture(event.pointerId);
+      event.stopPropagation();
     };
 
     const onPointerMove = (event: PointerEvent) => {
       if (!dragging || event.pointerId !== activePointerId) return;
+      event.stopPropagation();
 
       if (mode === 'rectangle') {
         const rect = clampRectToViewport(
@@ -55,6 +60,7 @@ export async function runSelectionSession(mode: SelectionMode): Promise<Selectio
 
     const onPointerUp = (event: PointerEvent) => {
       if (!dragging || event.pointerId !== activePointerId) return;
+      event.stopPropagation();
       dragging = false;
 
       cleanup();
@@ -88,6 +94,16 @@ export async function runSelectionSession(mode: SelectionMode): Promise<Selectio
       reject(new Error('Selection cancelled'));
     };
 
+    const onClick = (event: MouseEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+    };
+
+    const onContextMenu = (event: MouseEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       cleanup();
@@ -104,7 +120,10 @@ export async function runSelectionSession(mode: SelectionMode): Promise<Selectio
       overlay.root.removeEventListener('pointermove', onPointerMove);
       overlay.root.removeEventListener('pointerup', onPointerUp);
       overlay.root.removeEventListener('pointercancel', onPointerCancel);
+      overlay.root.removeEventListener('click', onClick);
+      overlay.root.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('keydown', onKeyDown, true);
+      document.body.style.setProperty('pointer-events', originalBodyPointerEvents);
       overlay.destroy();
     };
 
@@ -112,6 +131,8 @@ export async function runSelectionSession(mode: SelectionMode): Promise<Selectio
     overlay.root.addEventListener('pointermove', onPointerMove);
     overlay.root.addEventListener('pointerup', onPointerUp);
     overlay.root.addEventListener('pointercancel', onPointerCancel);
+    overlay.root.addEventListener('click', onClick, true);
+    overlay.root.addEventListener('contextmenu', onContextMenu, true);
     window.addEventListener('keydown', onKeyDown, true);
   });
 }

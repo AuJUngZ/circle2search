@@ -19,6 +19,10 @@ let activeSelectionSession: Promise<{
 }> | null = null;
 
 browser.runtime.onMessage.addListener(async (message: unknown) => {
+  if (window.top !== window.self) {
+    throw new Error('Selection only runs in the top-level page');
+  }
+
   if (!isStartSelectionMessage(message)) {
     return undefined;
   }

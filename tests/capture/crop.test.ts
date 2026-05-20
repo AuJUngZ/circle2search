@@ -23,46 +23,42 @@ describe('createCropPlan', () => {
 });
 
 describe('cropImageDataUrl', () => {
-  it('draws the requested crop to a canvas and returns a png blob', async () => {
-    const blob = new Blob(['crop'], { type: 'image/png' });
+  it('uses OffscreenCanvas and createImageBitmap to crop and return a png blob', async () => {
+    const inputBlob = new Blob(['fake-png'], { type: 'image/png' });
+    const outputBlob = new Blob(['cropped'], { type: 'image/png' });
+
+    const bitmap = { width: 500, height: 300, close: vi.fn() };
     const drawImage = vi.fn();
-    const decode = vi.fn().mockResolvedValue(undefined);
+    const convertToBlob = vi.fn().mockResolvedValue(outputBlob);
 
-    class FakeImage {
-      src = '';
-      decode = decode;
-    }
-
+    const canvasCtx = { drawImage };
     const canvas = {
       width: 0,
       height: 0,
-      getContext: vi.fn(() => ({ drawImage })),
-      toBlob: vi.fn((callback: (value: Blob | null) => void) => callback(blob))
+      getContext: vi.fn(() => canvasCtx),
+      convertToBlob
     };
 
-    vi.stubGlobal('Image', FakeImage);
-    vi.stubGlobal('document', {
-      createElement: vi.fn((tagName: string) => {
-        if (tagName !== 'canvas') {
-          throw new Error(`Unexpected element: ${tagName}`);
-        }
+    vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue(bitmap));
+    vi.stubGlobal('OffscreenCanvas', vi.fn((w: number, h: number) => {
+      canvas.width = w;
+      canvas.height = h;
+      return canvas;
+    }));
 
-        return canvas;
-      })
-    });
-
-    const result = await cropImageDataUrl('data:image/png;base64,abc', {
+    const result = await cropImageDataUrl(inputBlob, {
       sourceX: 12,
       sourceY: 18,
       sourceWidth: 30,
       sourceHeight: 40
     });
 
-    expect(result).toBe(blob);
-    expect(decode).toHaveBeenCalledTimes(1);
+    expect(result).toBe(outputBlob);
+    expect(createImageBitmap).toHaveBeenCalledWith(inputBlob);
     expect(canvas.width).toBe(30);
     expect(canvas.height).toBe(40);
-    expect(drawImage).toHaveBeenCalledWith(expect.any(FakeImage), 12, 18, 30, 40, 0, 0, 30, 40);
-    expect(canvas.toBlob).toHaveBeenCalledWith(expect.any(Function), 'image/png');
+    expect(drawImage).toHaveBeenCalledWith(bitmap, 12, 18, 30, 40, 0, 0, 30, 40);
+    expect(convertToBlob).toHaveBeenCalledWith({ type: 'image/png' });
+    expect(bitmap.close).toHaveBeenCalledOnce();
   });
 });

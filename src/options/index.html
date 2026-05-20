@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crop2Search Options</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main class="page">
+      <h1>Crop2Search</h1>
+      <p>Choose which selection mode opens by default.</p>
+      <form id="options-form">
+        <label>
+          <input type="radio" name="mode" value="rectangle" />
+          Rectangle
+        </label>
+        <label>
+          <input type="radio" name="mode" value="freeform" />
+          Freeform
+        </label>
+      </form>
+      <p class="hint">Keyboard shortcut: configure the browser command for <code>start-selection</code>.</p>
+      <script type="module" src="./index.js"></script>
+    </main>
+  </body>
+</html>

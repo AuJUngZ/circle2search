@@ -1,4 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('webextension-polyfill', () => ({
+  default: {
+    tabs: {
+      create: vi.fn()
+    },
+    scripting: {
+      executeScript: vi.fn()
+    }
+  }
+}));
+
 import {
   buildGoogleLensForm,
   getGoogleLensUploadUrl,

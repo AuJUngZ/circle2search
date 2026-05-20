@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Crop2Search",
+  "version": "0.1.0",
+  "description": "Select part of a webpage and search it with Google Lens.",
+  "permissions": ["activeTab", "storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "scripts": ["background/index.js"],
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Start Crop2Search"
+  },
+  "commands": {
+    "start-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Start selection mode"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/index.js"],
+      "css": ["overlay/overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "options/index.html",
+    "open_in_tab": true
+  }
+}

@@ -18,22 +18,19 @@ export function createCropPlan(bounds: Rect, context: ImageScaleContext): CropPl
   };
 }
 
-export async function cropImageDataUrl(imageDataUrl: string, plan: CropPlan): Promise<Blob> {
-  const image = new Image();
-  image.src = imageDataUrl;
-  await image.decode();
+export async function cropImageDataUrl(blob: Blob, plan: CropPlan): Promise<Blob> {
+  const bitmap = await createImageBitmap(blob);
 
-  const canvas = document.createElement('canvas');
-  canvas.width = plan.sourceWidth;
-  canvas.height = plan.sourceHeight;
+  const canvas = new OffscreenCanvas(plan.sourceWidth, plan.sourceHeight);
   const context = canvas.getContext('2d');
 
   if (!context) {
+    bitmap.close();
     throw new Error('2D canvas context unavailable');
   }
 
   context.drawImage(
-    image,
+    bitmap,
     plan.sourceX,
     plan.sourceY,
     plan.sourceWidth,
@@ -44,9 +41,10 @@ export async function cropImageDataUrl(imageDataUrl: string, plan: CropPlan): Pr
     plan.sourceHeight
   );
 
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-  if (!blob) {
+  const resultBlob = await canvas.convertToBlob({ type: 'image/png' });
+  bitmap.close();
+  if (!resultBlob) {
     throw new Error('Failed to create crop blob');
   }
-  return blob;
+  return resultBlob;
 }
