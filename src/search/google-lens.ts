@@ -38,6 +38,7 @@ export function buildGoogleLensForm(file: File): HTMLFormElement {
 }
 
 const STORAGE_KEY = 'crop2search:pending-image';
+const BASE64_CHARCODE_CHUNK_SIZE = 0x8000;
 
 export async function openGoogleLensResults(file: File): Promise<void> {
   const serialized = {
@@ -53,6 +54,12 @@ export async function openGoogleLensResults(file: File): Promise<void> {
 }
 
 async function fileToBase64(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+
+  for (let index = 0; index < bytes.length; index += BASE64_CHARCODE_CHUNK_SIZE) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + BASE64_CHARCODE_CHUNK_SIZE));
+  }
+
+  return btoa(binary);
 }

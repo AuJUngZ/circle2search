@@ -5,16 +5,26 @@ vi.mock('webextension-polyfill', () => ({
     tabs: {
       create: vi.fn()
     },
+    runtime: {
+      getURL: vi.fn(() => 'moz-extension://search/index.html')
+    },
+    storage: {
+      local: {
+        set: vi.fn()
+      }
+    },
     scripting: {
       executeScript: vi.fn()
     }
   }
 }));
 
+import browser from 'webextension-polyfill';
 import {
   buildGoogleLensForm,
   getGoogleLensUploadUrl,
-  getSearchFormFields
+  getSearchFormFields,
+  openGoogleLensResults
 } from '../../src/search/google-lens';
 
 afterEach(() => {
@@ -105,5 +115,24 @@ describe('buildGoogleLensForm', () => {
       value: ''
     });
     expect(form.children).toEqual([fileInput, imageContent]);
+  });
+});
+
+describe('openGoogleLensResults', () => {
+  it('stores large images without overflowing the call stack', async () => {
+    vi.mocked(browser.storage.local.set).mockResolvedValue(undefined);
+    vi.mocked(browser.tabs.create).mockResolvedValue(undefined as never);
+
+    const file = new File([new Uint8Array(256 * 1024)], 'large-crop.png', {
+      type: 'image/png'
+    });
+
+    await expect(openGoogleLensResults(file)).resolves.toBeUndefined();
+
+    expect(browser.storage.local.set).toHaveBeenCalledOnce();
+    expect(browser.tabs.create).toHaveBeenCalledWith({
+      url: 'moz-extension://search/index.html',
+      active: false
+    });
   });
 });
