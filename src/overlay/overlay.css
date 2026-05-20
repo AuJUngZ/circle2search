@@ -11,6 +11,22 @@
   background: rgba(15, 23, 42, 0.32);
 }
 
+.crop2search-path-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.crop2search-path {
+  fill: rgba(255, 255, 255, 0.14);
+  stroke: #f8fafc;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .crop2search-rect {
   position: absolute;
   border: 2px solid #f8fafc;

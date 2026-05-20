@@ -1,15 +1,12 @@
-import { clampRectToViewport, normalizeRect } from '../shared/geometry';
-import type { RectangleSelection, SelectionMode } from '../shared/types';
+import { clampRectToViewport, closeFreeformPath, getBoundsFromPoints, normalizeRect } from '../shared/geometry';
+import type { Point, SelectionMode, SelectionPayload } from '../shared/types';
 import { createOverlayRoot } from '../overlay/overlay-root';
 
-export async function runSelectionSession(mode: SelectionMode): Promise<RectangleSelection> {
-  if (mode !== 'rectangle') {
-    throw new Error('Freeform mode is not implemented yet');
-  }
-
+export async function runSelectionSession(mode: SelectionMode): Promise<SelectionPayload> {
   const overlay = createOverlayRoot();
+  const points: Point[] = [];
 
-  return await new Promise<RectangleSelection>((resolve, reject) => {
+  return await new Promise<SelectionPayload>((resolve, reject) => {
     let startX = 0;
     let startY = 0;
     let dragging = false;
@@ -24,42 +21,65 @@ export async function runSelectionSession(mode: SelectionMode): Promise<Rectangl
       activePointerId = event.pointerId;
       startX = event.clientX;
       startY = event.clientY;
-      overlay.rect.hidden = false;
+      points.length = 0;
+      points.push({ x: event.clientX, y: event.clientY });
+
+      if (mode === 'rectangle') {
+        overlay.rect.hidden = false;
+      }
+
       overlay.root.setPointerCapture(event.pointerId);
     };
 
     const onPointerMove = (event: PointerEvent) => {
       if (!dragging || event.pointerId !== activePointerId) return;
-      const rect = clampRectToViewport(
-        normalizeRect({ x1: startX, y1: startY, x2: event.clientX, y2: event.clientY }),
-        { width: window.innerWidth, height: window.innerHeight }
-      );
 
-      Object.assign(overlay.rect.style, {
-        left: `${rect.left}px`,
-        top: `${rect.top}px`,
-        width: `${rect.width}px`,
-        height: `${rect.height}px`
-      });
+      if (mode === 'rectangle') {
+        const rect = clampRectToViewport(
+          normalizeRect({ x1: startX, y1: startY, x2: event.clientX, y2: event.clientY }),
+          { width: window.innerWidth, height: window.innerHeight }
+        );
+
+        Object.assign(overlay.rect.style, {
+          left: `${rect.left}px`,
+          top: `${rect.top}px`,
+          width: `${rect.width}px`,
+          height: `${rect.height}px`
+        });
+      } else {
+        points.push({ x: event.clientX, y: event.clientY });
+        const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+        overlay.path.setAttribute('d', d);
+      }
     };
 
     const onPointerUp = (event: PointerEvent) => {
       if (!dragging || event.pointerId !== activePointerId) return;
       dragging = false;
 
-      const rect = clampRectToViewport(
-        normalizeRect({ x1: startX, y1: startY, x2: event.clientX, y2: event.clientY }),
-        { width: window.innerWidth, height: window.innerHeight }
-      );
-
       cleanup();
 
-      if (rect.width === 0 || rect.height === 0) {
-        reject(new Error('Selection requires a non-zero area'));
-        return;
-      }
+      if (mode === 'rectangle') {
+        const rect = clampRectToViewport(
+          normalizeRect({ x1: startX, y1: startY, x2: event.clientX, y2: event.clientY }),
+          { width: window.innerWidth, height: window.innerHeight }
+        );
 
-      resolve({ kind: 'rectangle', rect });
+        if (rect.width === 0 || rect.height === 0) {
+          reject(new Error('Selection requires a non-zero area'));
+          return;
+        }
+
+        resolve({ kind: 'rectangle', rect });
+      } else {
+        const closed = closeFreeformPath(points);
+        if (closed.length < 3) {
+          reject(new Error('Freeform selection requires at least 3 points'));
+          return;
+        }
+        const bounds = getBoundsFromPoints(closed);
+        resolve({ kind: 'freeform', points: closed, bounds });
+      }
     };
 
     const onPointerCancel = (event: PointerEvent) => {
