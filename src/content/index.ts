@@ -12,6 +12,12 @@ function isStartSelectionMessage(message: unknown): message is StartSelectionMes
   return typeof message === 'object' && message !== null;
 }
 
+let activeSelectionSession: Promise<{
+  viewportWidth: number;
+  viewportHeight: number;
+  selection: Awaited<ReturnType<typeof runSelectionSession>>;
+}> | null = null;
+
 browser.runtime.onMessage.addListener(async (message: unknown) => {
   if (!isStartSelectionMessage(message)) {
     return undefined;
@@ -21,11 +27,23 @@ browser.runtime.onMessage.addListener(async (message: unknown) => {
     return undefined;
   }
 
-  const mode = message.mode ?? (await getDefaultSelectionMode());
-  const selection = await runSelectionSession(mode);
-  return {
-    viewportWidth: window.innerWidth,
-    viewportHeight: window.innerHeight,
-    selection
-  };
+  if (activeSelectionSession) {
+    throw new Error('Selection session already in progress');
+  }
+
+  activeSelectionSession = (async () => {
+    const mode = message.mode ?? (await getDefaultSelectionMode());
+    const selection = await runSelectionSession(mode);
+    return {
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      selection
+    };
+  })();
+
+  try {
+    return await activeSelectionSession;
+  } finally {
+    activeSelectionSession = null;
+  }
 });
