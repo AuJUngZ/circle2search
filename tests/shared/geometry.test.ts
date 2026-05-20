@@ -33,6 +33,10 @@ describe('getBoundsFromPoints', () => {
       height: 80
     });
   });
+
+  it('rejects an empty point list', () => {
+    expect(() => getBoundsFromPoints([])).toThrow('at least one point');
+  });
 });
 
 describe('closeFreeformPath', () => {
@@ -62,6 +66,20 @@ describe('clampRectToViewport', () => {
       top: 8,
       width: 30,
       height: 32
+    });
+  });
+
+  it('keeps a fully offscreen rectangle inside the viewport bounds', () => {
+    expect(
+      clampRectToViewport(
+        { left: 40, top: 5, width: 10, height: 10 },
+        { width: 30, height: 40 }
+      )
+    ).toEqual({
+      left: 30,
+      top: 5,
+      width: 0,
+      height: 10
     });
   });
 });
