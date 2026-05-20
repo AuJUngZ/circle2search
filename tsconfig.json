@@ -9,8 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node", "webextension-polyfill"],
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "types": ["node", "webextension-polyfill"]
   },
   "include": ["src", "tests", "scripts", "manifests"]
 }
