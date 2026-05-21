@@ -1,114 +1,102 @@
-# Browser Image Search Extension
+# Crop2Search
 
-A lightweight, local-only browser extension for Chrome and Firefox that lets you select any region on a webpage and instantly search for it using Google Lens.
+Crop2Search is a local-first browser extension for Chrome and Firefox that lets you crop part of any webpage and send it to Google Lens in a new tab.
 
-## Features
+![Crop2Search overview](public/overview.gif)
 
-- **Quick Image Search**: Select any area of a webpage with your mouse or draw a freeform selection
-- **Multiple Selection Modes**:
-  - Rectangle selection for precise areas
-  - Freeform selection for irregular shapes
-- **Multiple Activation Methods**:
-  - Click the toolbar button
-  - Use a keyboard shortcut
-- **Instant Results**: Opens Google image search results in a new tab automatically
-- **Privacy-Focused**: All image capture and processing happens locally in your browser—no cloud uploads or external services
-- **Cross-Browser**: Works seamlessly on both Chrome and Firefox
+## Why Use It
 
-## Quick Start
+- Search a product, illustration, meme, or screenshot fragment without saving an image first
+- Choose between rectangle selection and freeform selection
+- Start from the toolbar button or the `start-selection` browser command
+- Keep capture and cropping inside the browser before opening Google Lens
 
-### Installation
+## Install In 3 Minutes
 
-1. Clone or download this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+### 1. Install dependencies
 
-### Building the Extension
+```bash
+npm install
+```
 
-Build unpacked extensions for both Chrome and Firefox:
+### 2. Build the extension
 
 ```bash
 npm run build
 ```
 
-The built extensions will be available in:
+Build output:
 
-- `dist/chrome` (Chrome extension)
-- `dist/firefox` (Firefox extension)
+- `dist/chrome`
+- `dist/firefox`
 
-### Loading into Your Browser
+### 3. Load it in your browser
 
-**Chrome:**
+**Chrome**
 
 1. Open `chrome://extensions/`
-2. Enable "Developer mode" (top right)
-3. Click "Load unpacked"
-4. Select the `dist/chrome` folder
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select `dist/chrome`
 
-**Firefox:**
+**Firefox**
 
 1. Open `about:debugging#/runtime/this-firefox`
-2. Click "Load Temporary Add-on"
-3. Select any file from the `dist/firefox` folder
+2. Click **Load Temporary Add-on**
+3. Open any file inside `dist/firefox`
 
-## Usage
+## How To Use It
 
-1. **Activate the Extension**:
-   - Click the extension icon in your toolbar, or
-   - Use the keyboard shortcut (configurable in your browser settings)
+1. Start Crop2Search from the toolbar button or the browser command shortcut.
+2. Select the part of the page you want to search.
+3. Review the Google Lens results in the new tab that opens automatically.
 
-2. **Select an Area**:
-   - For rectangle: Click and drag to draw a rectangle around the item
-   - For freeform: Click points to draw around the item, then double-click to finish
+### Selection Modes
 
-3. **View Results**:
-   - A new tab opens automatically with Google Lens results for your selection
+- `Rectangle`: click and drag for a fast rectangular crop
+- `Freeform`: click around the subject and double-click to finish
+
+### Shortcut And Controls
+
+- Default command: `Ctrl+Shift+Y`
+- Press `Esc` to cancel an active selection
+- Change the default selection mode from the extension options page
+
+## What It Does Well
+
+- Works across arbitrary webpages
+- Supports both precise box crops and irregular outlines
+- Keeps the extension flow lightweight and quick to trigger
 
 ## Development
 
-### Available Commands
+### Commands
 
-- `npm install` — Install dependencies
-- `npm run typecheck` — Type check with TypeScript
-- `npm test` — Run unit tests
-- `npm test:watch` — Run tests in watch mode
-- `npm run build` — Build for Chrome and Firefox
+- `npm run build` builds the Chrome and Firefox bundles
+- `npm run typecheck` runs TypeScript checks
+- `npm test` runs the test suite
+- `npm test:watch` runs tests in watch mode
 
-### Project Structure
+### Project Layout
 
-- `src/background/` — Background script that coordinates the extension
-- `src/content/` — Content scripts injected into webpages
-- `src/overlay/` — Selection overlay UI
-- `src/capture/` — Image capture and crop logic
-- `src/search/` — Google Lens search integration
-- `src/shared/` — Shared utilities and types
-- `tests/` — Unit tests
-- `manifests/` — Browser manifest files
+- `src/background/` coordinates activation and search flow
+- `src/content/` handles page-level selection sessions
+- `src/overlay/` renders the in-page selection UI
+- `src/capture/` crops the captured image
+- `src/search/` prepares and submits the Google Lens search
+- `src/options/` stores user preferences like default selection mode
+- `src/shared/` contains shared types, storage, and utilities
+- `manifests/` contains browser-specific extension manifests
 
 ### Browser Support
 
 - Chrome 90+
 - Firefox 88+
 
-## Architecture
-
-The extension follows a modular architecture across multiple script contexts:
-
-- **Background Script**: Listens for activation, manages the capture flow, and opens search results
-- **Content Script**: Injects the selection UI into webpages and captures user selection coordinates
-- **Overlay UI**: Renders the selection interface with visual feedback
-- **Capture Module**: Handles image capture and cropping locally
-
 ## Contributing
 
-This is a browser extension project built with TypeScript and Vitest. Contributions should:
-
-- Follow the existing code structure
-- Include tests for new functionality
-- Pass type checking and tests before submission
+Contributions are welcome. Keep changes aligned with the current TypeScript structure, include tests when behavior changes, and make sure type checks and tests pass before submitting.
 
 ## License
 
-See LICENSE file for details.
+See `LICENSE` for details.
